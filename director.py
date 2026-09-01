@@ -1,34 +1,31 @@
-import os
-import requests
-from google import genai
+import streamlit as st
+from director import generate_scene_director, render_video_from_prompt
 
-def generate_scene_director(prompt_text):
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return "Error: GEMINI_API_KEY is missing."
+st.set_page_config(page_title="AI Video Studio", page_icon="🎬")
+st.title("🎬 AI Video Studio (Forever Free)")
+st.write("Generate downloadable videos directly from your phone for Facebook!")
 
-    client = genai.Client(api_key=api_key)
+user_input = st.text_area(
+    "Describe your video scene:", 
+    "A confident presenter speaking in a modern cozy studio, high quality, cinematic lighting."
+)
 
-    director_prompt = f"""
-    You are an expert AI Video Director. 
-    Based on this input: '{prompt_text}', write a concise visual prompt (under 40 words) describing the scene visuals for an AI video generator. 
-    Focus only on lighting, movement, character appearance, and camera angle.
-    """
-
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=director_prompt,
-    )
-    return response.text.strip()
-
-def render_video_from_prompt(visual_prompt):
-    API_URL = "https://api-inference.huggingface.co/models/cerspense/zeroscope_v2_576w"
-    headers = {"Content-Type": "application/json"}
-    payload = {"inputs": visual_prompt}
-
-    response = requests.post(API_URL, headers=headers, json=payload)
-    if response.status_code == 200:
-        return response.content
-    else:
-        return None
-        
+if st.button("🚀 Generate & Render Video"):
+    with st.spinner("Step 1/2: Generating visual direction with Gemini..."):
+        visual_prompt = generate_scene_director(user_input)
+        st.info(f"**Visual Prompt:** {visual_prompt}")
+    
+    with st.spinner("Step 2/2: Rendering MP4 Video (this takes 1-2 mins)..."):
+        video_bytes = render_video_from_prompt(visual_prompt)
+        if video_bytes:
+            st.success("Video Rendered Successfully!")
+            st.video(video_bytes)
+            st.download_button(
+                label="📥 Download Video (MP4)",
+                data=video_bytes,
+                file_name="facebook_scene.mp4",
+                mime="video/mp4"
+            )
+        else:
+            st.error("Video model is warming up. Please tap generate again in 30 seconds!")
+            
