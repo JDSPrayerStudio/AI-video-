@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from director import generate_scene_director, create_multi_character_dialogue
+from director import create_multi_character_dialogue
 
 st.set_page_config(page_title="AI Video Studio", page_icon="🎬")
 
@@ -8,7 +8,7 @@ st.title("🎬 AI Video Studio (Multi-Character Dialogue)")
 st.write("Generate custom voice-matched character dialogues directly from your phone!")
 
 # Multi-character image uploads
-st.subheader("1. Upload Character Portrets")
+st.subheader("1. Upload Character Portraits")
 col1, col2 = st.columns(2)
 with col1:
     char1_img = st.file_uploader("Upload Character 1 (e.g., Host)", type=["jpg", "png", "jpeg"], key="c1")
