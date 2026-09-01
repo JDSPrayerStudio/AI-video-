@@ -5,7 +5,7 @@ import google.generativeai as genai
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 def direct_scene(prompt, character_name, age_tone, costume):
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel("gemini-2.5-flash")
     full_prompt = (
         f"You are an AI video studio director. "
         f"Character Name: {character_name}, Voice/Age Tone: {age_tone}, Costume: {costume}. "
