@@ -1,34 +1,31 @@
 import streamlit as st
-import os
-from director import direct_scene
+from director import generate_scene_director, render_video_from_prompt
 
 st.set_page_config(page_title="AI Video Studio", page_icon="🎬")
-
 st.title("🎬 AI Video Studio (Forever Free)")
-st.markdown("Build and direct your videos for Facebook monetization straight from your phone.")
+st.write("Generate downloadable videos directly from your phone for Facebook!")
 
-# Sidebar / Input Configuration for Characters
-st.sidebar.header("👤 Character Settings")
-character_name = st.sidebar.text_input("Character Name", value="Arthur")
-age_tone = st.sidebar.selectbox("Voice Tone / Age", ["Old Man", "Young Child", "Adult Male", "Adult Female"])
-costume = st.sidebar.text_input("Costume Description", value="Red jacket and blue jeans")
+user_input = st.text_area(
+    "Describe your video scene:", 
+    "A confident presenter speaking in a modern cozy studio, high quality, cinematic lighting."
+)
 
-# Main Script Prompt Section
-st.header("📝 Scene Director Script")
-prompt = st.text_area("Describe what the character should say or do in this scene:", value="Welcome back to my channel, today we are talking about motivation and success.")
-
-if st.button("🚀 Direct Scene with Gemini"):
-    if not os.environ.get("GEMINI_API_KEY") and "GEMINI_API_KEY" not in st.secrets:
-        # Allow inputting API key dynamically if not set as environment variable
-        api_key_input = st.text_input("Enter your Gemini API Key:", type="password")
-        if api_key_input:
-            os.environ["GEMINI_API_KEY"] = api_key_input
+if st.button("🚀 Generate & Render Video"):
+    with st.spinner("Step 1/2: Generating visual direction with Gemini..."):
+        visual_prompt = generate_scene_director(user_input)
+        st.info(f"**Visual Prompt:** {visual_prompt}")
     
-    try:
-        with st.spinner("Director Gemini is crafting your scene..."):
-            result = direct_scene(prompt, character_name, age_tone, costume)
-            st.success("Scene Script Generated Successfully!")
-            st.write(result)
-    except Exception as e:
-        st.error(f"Error: {e}. Please ensure your Gemini API key is configured.")
-      
+    with st.spinner("Step 2/2: Rendering MP4 Video (this takes 1-2 mins)..."):
+        video_bytes = render_video_from_prompt(visual_prompt)
+        if video_bytes:
+            st.success("Video Rendered Successfully!")
+            st.video(video_bytes)
+            st.download_button(
+                label="📥 Download Video (MP4)",
+                data=video_bytes,
+                file_name="facebook_scene.mp4",
+                mime="video/mp4"
+            )
+        else:
+            st.error("Video model is currently warming up on Hugging Face. Please tap generate again in 30 seconds!")
+            
