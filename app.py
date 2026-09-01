@@ -1,31 +1,47 @@
 import streamlit as st
-from director import generate_scene_director, render_video_from_prompt
+import os
+from director import generate_scene_director, create_multi_character_dialogue
 
 st.set_page_config(page_title="AI Video Studio", page_icon="🎬")
-st.title("🎬 AI Video Studio (Forever Free)")
-st.write("Generate downloadable videos directly from your phone for Facebook!")
 
-user_input = st.text_area(
-    "Describe your video scene:", 
-    "A confident presenter speaking in a modern cozy studio, high quality, cinematic lighting."
+st.title("🎬 AI Video Studio (Multi-Character Dialogue)")
+st.write("Generate custom voice-matched character dialogues directly from your phone!")
+
+# Multi-character image uploads
+st.subheader("1. Upload Character Portrets")
+col1, col2 = st.columns(2)
+with col1:
+    char1_img = st.file_uploader("Upload Character 1 (e.g., Host)", type=["jpg", "png", "jpeg"], key="c1")
+with col2:
+    char2_img = st.file_uploader("Upload Character 2 (e.g., Guest)", type=["jpg", "png", "jpeg"], key="c2")
+
+# Script / Dialogue Input
+st.subheader("2. Define Dialogue Script")
+dialogue_prompt = st.text_area(
+    "Enter dialogue details or conversation topic:",
+    "Host: Welcome to the show! Guest: Thanks for having me, let's talk about AI."
 )
 
-if st.button("🚀 Generate & Render Video"):
-    with st.spinner("Step 1/2: Generating visual direction with Gemini..."):
-        visual_prompt = generate_scene_director(user_input)
-        st.info(f"**Visual Prompt:** {visual_prompt}")
-    
-    with st.spinner("Step 2/2: Rendering MP4 Video (this takes 1-2 mins)..."):
-        video_bytes = render_video_from_prompt(visual_prompt)
-        if video_bytes:
-            st.success("Video Rendered Successfully!")
-            st.video(video_bytes)
-            st.download_button(
-                label="📥 Download Video (MP4)",
-                data=video_bytes,
-                file_name="facebook_scene.mp4",
-                mime="video/mp4"
-            )
-        else:
-            st.error("Video model is currently warming up on Hugging Face. Please tap generate again in 30 seconds!")
+if st.button("🚀 Generate Dialogue Package"):
+    if not char1_img or not char2_img:
+        st.error("Please upload both character images to proceed with the dialogue.")
+    else:
+        with st.spinner("Gemini is structuring the dialogue and synthesizing voices..."):
+            # Save uploaded images temporarily
+            c1_path = "char1_temp.jpg"
+            c2_path = "char2_temp.jpg"
+            with open(c1_path, "wb") as f:
+                f.write(char1_img.getbuffer())
+            with open(c2_path, "wb") as f:
+                f.write(char2_img.getbuffer())
+
+            # Generate script and audio tracks via director module
+            script_result, audio_files = create_multi_character_dialogue(dialogue_prompt)
             
+            st.success("Dialogue script and custom voice tracks created successfully!")
+            st.write(script_result)
+            
+            # Play generated audio tracks
+            for idx, audio in enumerate(audio_files):
+                st.audio(audio, format="audio/mp3")
+                
