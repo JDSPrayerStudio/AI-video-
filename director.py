@@ -26,9 +26,13 @@ def render_video_from_prompt(visual_prompt):
     headers = {"Content-Type": "application/json"}
     payload = {"inputs": visual_prompt}
 
-    response = requests.post(API_URL, headers=headers, json=payload)
-    if response.status_code == 200:
-        return response.content
-    else:
+    try:
+        # Added a 60-second timeout so it safely waits for the model to respond
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
+        if response.status_code == 200:
+            return response.content
+        else:
+            return None
+    except requests.exceptions.RequestException:
         return None
         
