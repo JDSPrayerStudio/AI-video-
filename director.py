@@ -1,6 +1,6 @@
 import os
-import requests
 from google import genai
+from gtts import gTTS
 
 def generate_scene_director(prompt_text):
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -8,11 +8,9 @@ def generate_scene_director(prompt_text):
         return "Error: GEMINI_API_KEY is missing."
 
     client = genai.Client(api_key=api_key)
-
     director_prompt = f"""
-    You are an expert AI Video Director. 
-    Based on this input: '{prompt_text}', write a concise visual prompt (under 40 words) describing the scene visuals for an AI video generator. 
-    Focus only on lighting, movement, character appearance, and camera angle.
+    You are an expert AI Dialogue Director. 
+    Based on this input: '{prompt_text}', rewrite it into a clear two-person alternating script format starting explicitly with 'Speaker 1:' and 'Speaker 2:'. Keep sentences punchy and optimized for short-form video.
     """
 
     response = client.models.generate_content(
@@ -21,18 +19,21 @@ def generate_scene_director(prompt_text):
     )
     return response.text.strip()
 
-def render_video_from_prompt(visual_prompt):
-    API_URL = "https://api-inference.huggingface.co/models/cerspense/zeroscope_v2_576w"
-    headers = {"Content-Type": "application/json"}
-    payload = {"inputs": visual_prompt}
-
-    try:
-        # Added a 60-second timeout so it safely waits for the model to respond
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
-        if response.status_code == 200:
-            return response.content
-        else:
-            return None
-    except requests.exceptions.RequestException:
-        return None
-        
+def create_multi_character_dialogue(prompt_text):
+    # Step 1: Get structured script from Gemini
+    script_text = generate_scene_director(prompt_text)
+    
+    # Step 2: Split script lines and generate custom audio clips via gTTS
+    lines = script_text.split('\n')
+    audio_files = []
+    
+    for i, line in enumerate(lines):
+        if line.strip():
+            # Generate speech audio matching the exact script line text
+            tts = gTTS(text=line, lang='en', slow=False)
+            audio_path = f"line_{i}.mp3"
+            tts.save(audio_path)
+            audio_files.append(audio_path)
+            
+    return script_text, audio_files
+    
