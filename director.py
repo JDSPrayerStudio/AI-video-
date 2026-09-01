@@ -11,7 +11,7 @@ def generate_scene_director(prompt_text):
     client = genai.Client(api_key=api_key)
     director_prompt = f"""
     You are an expert AI Dialogue Director. 
-    Based on this input: '{prompt_text}', rewrite it into a clear short dialogue format with individual spoken lines. Keep sentences punchy.
+    Based on this input: '{prompt_text}', rewrite it into a clear two-person alternating script format starting with 'Host:' and 'Guest:'. Keep sentences punchy.
     """
 
     response = client.models.generate_content(
@@ -36,7 +36,6 @@ def create_multi_character_dialogue(prompt_text):
 
 def animate_talking_head(image_path, audio_path):
     try:
-        # Connects to a free public GPU space for face animation
         client = Client("KlingTeam/LivePortrait")
         result = client.predict(
             source_image=image_path,
@@ -47,5 +46,3 @@ def animate_talking_head(image_path, audio_path):
     except Exception as e:
         return None
         
-    return script_text, audio_files
-    
