@@ -1,22 +1,36 @@
 import os
-import google.generativeai as genai
+import time
+import requests
+from google import genai
 
-# Configure Gemini API using environment secret
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+def generate_scene_director(prompt_text):
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return "Error: GEMINI_API_KEY environment variable is missing."
 
-def direct_scene(prompt, character_name, age_tone, costume):
-    model = genai.GenerativeModel("gemini-2.5-flash")
-    full_prompt = (
-        f"You are an AI video studio director. "
-        f"Character Name: {character_name}, Voice/Age Tone: {age_tone}, Costume: {costume}. "
-        f"Based on this script concept: '{prompt}', break it down into precise spoken lines "
-        f"and visual directions formatted for video generation."
+    client = genai.Client(api_key=api_key)
+
+    director_prompt = f"""
+    You are an expert AI Video Director. 
+    Based on this input: '{prompt_text}', write a concise visual prompt (under 40 words) describing the scene visuals for an AI video generator. 
+    Focus only on lighting, movement, character appearance, and camera angle.
+    """
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=director_prompt,
     )
-    
-    response = model.generate_content(full_prompt)
-    return response.text
+    return response.text.strip()
 
-if __name__ == "__main__":
-    # Test script execution
-    print("AI Studio Director Initialized Successfully.")
-  
+def render_video_from_prompt(visual_prompt):
+    # Free Hugging Face Inference API for Zeroscope Text-to-Video
+    API_URL = "https://api-inference.huggingface.co/models/cerspense/zeroscope_v2_576w"
+    headers = {"Content-Type": "application/json"}
+    payload = {"inputs": visual_prompt}
+
+    response = requests.post(API_URL, headers=headers, json=payload)
+    if response.status_code == 200:
+        return response.content
+    else:
+        return None
+        
