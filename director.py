@@ -1,12 +1,11 @@
 import os
-import time
 import requests
 from google import genai
 
 def generate_scene_director(prompt_text):
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        return "Error: GEMINI_API_KEY environment variable is missing."
+        return "Error: GEMINI_API_KEY is missing."
 
     client = genai.Client(api_key=api_key)
 
@@ -23,7 +22,6 @@ def generate_scene_director(prompt_text):
     return response.text.strip()
 
 def render_video_from_prompt(visual_prompt):
-    # Free Hugging Face Inference API for Zeroscope Text-to-Video
     API_URL = "https://api-inference.huggingface.co/models/cerspense/zeroscope_v2_576w"
     headers = {"Content-Type": "application/json"}
     payload = {"inputs": visual_prompt}
