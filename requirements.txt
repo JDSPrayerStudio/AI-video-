@@ -2,4 +2,4 @@ streamlit
 google-genai
 gtts
 requests
-
+gradio_client
