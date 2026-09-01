@@ -1,4 +1,5 @@
 import os
+import time
 from google import genai
 from gtts import gTTS
 from gradio_client import Client
@@ -35,14 +36,21 @@ def create_multi_character_dialogue(prompt_text):
     return script_text, audio_files
 
 def animate_talking_head(image_path, audio_path):
-    try:
-        client = Client("KlingTeam/LivePortrait")
-        result = client.predict(
-            source_image=image_path,
-            driving_audio=audio_path,
-            api_name="/predict"
-        )
-        return result
-    except Exception as e:
-        return None
-        
+    # Try up to 3 times to bypass public server traffic jams
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            client = Client("KlingTeam/LivePortrait")
+            result = client.predict(
+                source_image=image_path,
+                driving_audio=audio_path,
+                api_name="/predict"
+            )
+            return result
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(2) # Wait 2 seconds before retrying
+                continue
+            else:
+                return None
+                
